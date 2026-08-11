@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# api data store (regenerated from src/lib/seed.js on first request)
+/data
+
 # debug
 npm-debug.log*
 yarn-debug.log*
