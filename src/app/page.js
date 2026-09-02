@@ -1,13 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { StudentForm } from "../components/forms/studentform";
 import { CourseForm } from "../components/forms/courseform";
 
 export default function SimpleColorfulDashboard() {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -43,7 +41,6 @@ export default function SimpleColorfulDashboard() {
       alert("Deleted successfully!");
       setSelectedStudent(null);
       queryClient.invalidateQueries({ queryKey: ["students"] });
-      router.refresh();
     }
   });
 
@@ -61,7 +58,6 @@ export default function SimpleColorfulDashboard() {
       setSelectedCourse(null);
       queryClient.invalidateQueries({ queryKey: ["courses"] });
       queryClient.invalidateQueries({ queryKey: ["students"] });
-      router.refresh();
     }
   });
 
@@ -69,8 +65,8 @@ export default function SimpleColorfulDashboard() {
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #fff5f7 0%, #fbf8fd 100%)", padding: "40px 20px", fontFamily: "system-ui, sans-serif", display: "flex", flexDirection: "column", gap: "40px", alignItems: "center" }}>
       
       <div style={{ textAlign: "center" }}>
-        <h1 style={{ margin: 0, fontSize: "36px", fontWeight: "900", color: "#111827" }}>Forms In a Cute Way 🎨</h1>
-        <p style={{ margin: "5px 0 0 0", fontSize: "14px", fontWeight: "600", color: "#4b5563" }}>Simple, Colorful & Connected App</p>
+        <h1 style={{ margin: 0, fontSize: "36px", fontWeight: "900", color: "#111827" }}>Cutesy Forms</h1>
+        <p style={{ margin: "5px 0 0 0", fontSize: "14px", fontWeight: "600", color: "#4b5563" }}>Simple and Interesting</p>
       </div>
 
       <div style={{ display: "flex", flexDirection: "row", gap: "30px", flexWrap: "wrap", justifyContent: "center", width: "100%", maxWidth: "980px" }}>
