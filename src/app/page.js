@@ -1,69 +1,123 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { StudentForm } from "../components/forms/studentform";
+import { CourseForm } from "../components/forms/courseform";
+
+export default function SimpleColorfulDashboard() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+
+  const { data: students = [] } = useQuery({
+    queryKey: ["students"],
+    queryFn: () => fetch("http://localhost:3000/api/students", {
+      method: "GET",
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+      cache: "no-store"
+    }).then(r => r.json()).then(j => j.data)
+  });
+
+  const { data: courses = [] } = useQuery({
+    queryKey: ["courses"],
+    queryFn: () => fetch("http://localhost:3000/api/courses", {
+      method: "GET",
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+      cache: "no-store"
+    }).then(r => r.json()).then(j => j.data)
+  });
+
+  const deleteStudentMutation = useMutation({
+    mutationFn: async (id) => {
+      const res = await fetch(`http://localhost:3000/api/students/${id}`, { 
+        method: "DELETE",
+        headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+        cache: "no-store"
+      });
+      if (!res.ok) throw new Error();
+    },
+    onSuccess: () => {
+      alert("Deleted successfully!");
+      setSelectedStudent(null);
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      router.refresh();
+    }
+  });
+
+  const deleteCourseMutation = useMutation({
+    mutationFn: async (id) => {
+      const res = await fetch(`http://localhost:3000/api/courses/${id}`, { 
+        method: "DELETE",
+        headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+        cache: "no-store"
+      });
+      if (!res.ok) throw new Error();
+    },
+    onSuccess: () => {
+      alert("Deleted successfully!");
+      setSelectedCourse(null);
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      router.refresh();
+    }
+  });
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.js
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #fff5f7 0%, #fbf8fd 100%)", padding: "40px 20px", fontFamily: "system-ui, sans-serif", display: "flex", flexDirection: "column", gap: "40px", alignItems: "center" }}>
+      
+      <div style={{ textAlign: "center" }}>
+        <h1 style={{ margin: 0, fontSize: "36px", fontWeight: "900", color: "#111827" }}>Forms In a Cute Way 🎨</h1>
+        <p style={{ margin: "5px 0 0 0", fontSize: "14px", fontWeight: "600", color: "#4b5563" }}>Simple, Colorful & Connected App</p>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "row", gap: "30px", flexWrap: "wrap", justifyContent: "center", width: "100%", maxWidth: "980px" }}>
+        <StudentForm selectedStudent={selectedStudent} clearSelection={() => setSelectedStudent(null)} />
+        <CourseForm selectedCourse={selectedCourse} clearSelection={() => setSelectedCourse(null)} />
+      </div>
+
+      <div style={{ background: "#ffffff", padding: "24px", borderRadius: "24px", width: "100%", maxWidth: "940px", boxShadow: "0 4px 20px rgba(0,0,0,0.05)", boxSizing: "border-box", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "30px" }}>
+        
+        <div>
+          <h4 style={{ margin: "0 0 12px 0", color: "#ec4899" }}>Students Registry</h4>
+          <ul style={{ padding: 0, margin: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "8px" }}>
+            {students.map(s => (
+              <li key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f9fafb", padding: "10px 14px", borderRadius: "12px", border: "1px solid #e5e7eb", fontSize: "14px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                  <strong>{s.firstName} {s.lastName}</strong>
+                  <span style={{ color: "#6b7280", fontSize: "12px" }}>{s.email}</span>
+                </div>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  <button type="button" onClick={() => setSelectedStudent(s)} style={{ padding: "6px 12px", background: "#ec4899", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "11px", fontWeight: "700" }}>Select</button>
+                  <button type="button" onClick={() => { if(confirm("Are you sure?")) deleteStudentMutation.mutate(s.id); }} style={{ padding: "6px 12px", background: "#ef4444", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "11px", fontWeight: "700" }}>Delete</button>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div>
+          <h4 style={{ margin: "0 0 12px 0", color: "#f97316" }}>Courses Registry</h4>
+          <ul style={{ padding: 0, margin: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "8px" }}>
+            {courses.map(c => (
+              <li key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f9fafb", padding: "10px 14px", borderRadius: "12px", border: "1px solid #e5e7eb", fontSize: "14px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                  <strong>{c.code} — {c.title}</strong>
+                  <span style={{ color: "#6b7280", fontSize: "12px" }}>{c.credits} cr</span>
+                </div>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  <button type="button" onClick={() => setSelectedCourse(c)} style={{ padding: "6px 12px", background: "#f97316", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "11px", fontWeight: "700" }}>Select</button>
+                  <button type="button" onClick={() => { if(confirm("Are you sure?")) deleteCourseMutation.mutate(c.id); }} style={{ padding: "6px 12px", background: "#ef4444", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "11px", fontWeight: "700" }}>Delete</button>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
-      </main>
+
+      </div>
+
     </div>
   );
 }
